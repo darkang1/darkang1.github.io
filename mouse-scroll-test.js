@@ -1,98 +1,56 @@
 (function() {
     'use strict';
-
-    const SCROLL_AREAS = {
-        SETTINGS: '.settings__content',
-        LEFT_SIDEBAR: '.menu__list',
-        MAIN_CONTENT: '.scroll'
-    };
+    
+    console.log('Mouse wheel plugin script loaded');
 
     function startPlugin() {
-        document.addEventListener('wheel', handleScrollNavigation, { passive: false });
-        Lampa.Manifest.plugins['mouse_wheel_nav'] = {
-            name: 'Mouse Wheel Navigation',
-            version: '1.0',
-            description: 'Enables smart mouse wheel scrolling'
-        };
-    }
-
-    function handleScrollNavigation(event) {
-        event.preventDefault();
+        console.log('Starting mouse wheel plugin initialization');
         
-        const direction = event.deltaY > 0 ? 'down' : 'up';
+        // Test if Lampa object exists
+        if (typeof Lampa === 'undefined') {
+            console.error('Lampa object not found!');
+            return;
+        }
         
-        // Determine which area is active and should receive scroll events
-        if (isSettingsOpen()) {
-            handleSettingsScroll(direction, event);
-        } else if (isLeftSidebarActive()) {
-            handleLeftSidebarScroll(direction, event);
-        } else {
-            handleMainContentScroll(direction, event);
+        // Test if jQuery ($) is available
+        if (typeof $ === 'undefined') {
+            console.error('jQuery not found!');
+            return;
         }
-    }
 
-    function isSettingsOpen() {
-        return $('.settings.open').length > 0;
-    }
-
-    function isLeftSidebarActive() {
-        return $('.menu.open').length > 0 && 
-               document.activeElement.closest(SCROLL_AREAS.LEFT_SIDEBAR);
-    }
-
-    function handleSettingsScroll(direction, event) {
-        const settingsContent = $(SCROLL_AREAS.SETTINGS)[0];
-        if (!settingsContent) return;
-
-        const scrollAmount = 100; // Adjust this value for scroll speed
-        const currentScroll = settingsContent.scrollTop;
-        const newScroll = direction === 'down' ? 
-            currentScroll + scrollAmount : 
-            currentScroll - scrollAmount;
-
-        settingsContent.scrollTo({
-            top: newScroll,
-            behavior: 'smooth'
+        // Attach wheel event listener to document
+        document.addEventListener('wheel', function(event) {
+            console.log('Wheel event detected', {
+                deltaY: event.deltaY,
+                target: event.target
+            });
+            
+            // Log active elements
+            console.log('Active elements:', {
+                settings: $('.settings.open').length,
+                menu: $('.menu.open').length,
+                activeElement: document.activeElement
+            });
         });
+
+        console.log('Mouse wheel plugin initialized successfully');
     }
 
-    function handleLeftSidebarScroll(direction, event) {
-        const sidebarList = $(SCROLL_AREAS.LEFT_SIDEBAR)[0];
-        if (!sidebarList) return;
-
-        const currentFocus = $('.menu__item.focus');
-        const allItems = $('.menu__item');
-        const currentIndex = allItems.index(currentFocus);
-
-        if (direction === 'down' && currentIndex < allItems.length - 1) {
-            Lampa.Controller.move('down');
-        } else if (direction === 'up' && currentIndex > 0) {
-            Lampa.Controller.move('up');
-        }
-    }
-
-    function handleMainContentScroll(direction, event) {
-        const mainContent = $(SCROLL_AREAS.MAIN_CONTENT)[0];
-        if (!mainContent) return;
-
-        const scrollAmount = 150; // Adjust this value for main content scroll speed
-        const currentScroll = mainContent.scrollTop;
-        const newScroll = direction === 'down' ? 
-            currentScroll + scrollAmount : 
-            currentScroll - scrollAmount;
-
-        mainContent.scrollTo({
-            top: newScroll,
-            behavior: 'smooth'
-        });
-    }
-
-    // Plugin initialization
+    // Test both initialization paths
     if (window.appready) {
+        console.log('Window already ready - direct initialization');
         startPlugin();
     } else {
-        Lampa.Listener.follow('app', function(e) {
-            if (e.type == 'ready') startPlugin();
-        });
+        console.log('Waiting for app ready event');
+        if (Lampa && Lampa.Listener) {
+            Lampa.Listener.follow('app', function(e) {
+                console.log('App event received:', e);
+                if (e.type == 'ready') {
+                    startPlugin();
+                }
+            });
+        } else {
+            console.error('Lampa.Listener not available');
+        }
     }
 })();
